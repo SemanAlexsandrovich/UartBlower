@@ -10,6 +10,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 //#include <avr/sleep.h>
+#include <errno.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,9 +26,9 @@ volatile uint8_t j = 0;
 volatile uint8_t flag = 0;
 volatile uint8_t pwm = 0;
 
-char command_on[] = "On\r";
-char command_off[] = "Off\r";
-char command_pwm[] = "Power";
+const char command_on[] = "On\r";
+const char command_off[] = "Off\r";
+const char command_pwm[] = "Power";
 
 volatile uint8_t answer = 2;
 
@@ -50,26 +51,23 @@ int main(void) {
 	while (1) {
 		if (flag_recive) {
 			const char space[] = " ";
-			volatile char *until_space;
-			const char *after_space;
+			char *until_space;
+			char *after_space;
 			until_space = strtok (buff_rx_begin, space);
 			after_space = strtok (NULL, space);
 			if ( after_space != NULL){
+				*(after_space + 3) = '\0';
 				pwm = strtol(after_space,0, 10);
-				//pwm = atoi(after_space);
-				/*
-				#include <errno.h>
-				if (pwm == LONG_MIN && errno == ERANGE) {
-				…underflow…
-				} else if (pwm == LONG_MAX && errno == ERANGE) {
-				…overflow…
-				}
-				*/
-				if (pwm > 100) {
-					pwm = 100;
+				if (errno == ERANGE) {
+					pwm = 100;//overflow
+					errno = 0;
 				} else {
-					if (pwm <= 0) {
-					pwm = 0;
+					if (pwm > 100) {
+						pwm = 100;
+					} else {
+						if (pwm <= 0) {
+						pwm = 0;
+						}
 					}
 				}
 			}

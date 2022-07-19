@@ -29,17 +29,5 @@ void pwm_init(void) {
 void setPwmDuty(uint8_t duty) {
 	OCR1A = (uint16_t) (duty * TCNT1_TOP) / 100;
 }
-/*
-int main(void) {
-	pwm_init();
-	while (1) {
 
-		setPwmDuty(0);
-		_delay_ms(3 * ONE_SEC);
-		setPwmDuty(50);
-		_delay_ms(3 * ONE_SEC);
-		setPwmDuty(100)
-		_delay_ms(3 * ONE_SEC);
-	}
-}*/
 
