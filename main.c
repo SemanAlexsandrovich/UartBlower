@@ -15,15 +15,15 @@
 //#include <avr/sleep.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define USART_BAUDRATE 19200
 #define buff_rx_SIZE 32
 #define UBRR_VALUE 51
 #define SIZEOF_SENDBUF 20
 
-volatile char buff_rx[buff_rx_SIZE] = {0};
-volatile const char *buff_rx_begin = buff_rx;
-
+char buff_rx[buff_rx_SIZE] = {0};
+char *buff_rx_begin = buff_rx;
 
 #define SIZE_BUF 128
 
@@ -36,11 +36,11 @@ static volatile uint8_t count_tx = 0;
 volatile uint8_t pos = 0;
 volatile uint8_t j = 0;
 volatile uint8_t flag = 0;
-volatile uint8_t pwm = 10;
+volatile uint8_t pwm = 0;
 
 char command_on[] = "On\r";
 char command_off[] = "Off\r";
-char command_pwm[] = "Power\r";
+char command_pwm[] = "Power";
 
 volatile uint8_t answer = 2;
 
@@ -122,14 +122,50 @@ int main(void) {
 	sei();
 	while (1) {
 		if (flag_recive) {
+			//separate rx buf
+			const char space[] = " ";
+			volatile char *until_space;
+			const char *after_space;
+			until_space = strtok (buff_rx_begin, space);//part until space
+			after_space = strtok (NULL, space);//part after space
+			if ( after_space != NULL){
+				pwm = strtol(after_space,0, 10);
+				//pwm = atoi(after_space);
+				/*
+				#include <errno.h>
+				if (pwm == LONG_MIN && errno == ERANGE) {
+				…underflow…
+				} else if (pwm == LONG_MAX && errno == ERANGE) {
+				…overflow…
+				}
+				*/
+				if (pwm > 100) {
+					pwm = 100;
+				} else {
+					if (pwm <= 0) {
+					pwm = 0;
+					}
+				}
+			}
+			else {//str havnt spaces
+				until_space = buff_rx_begin;
+			}
 			char buff_to_send[SIZEOF_SENDBUF];
-			if (!strcmp((char *)buff_rx_begin, command_off)){
+			if (!strcmp((char *)until_space, command_off)){
 				sprintf((char*)buff_to_send,POWER_MODE_OFF);
 			} else {
-				if (!strcmp((char *)buff_rx_begin, command_on)){
+				if (!strcmp((char *)until_space, command_on)){
 					sprintf((char*)buff_to_send,POWER_MODE_ON, pwm);
 				} else {
-					sprintf((char*)buff_to_send, ERROR);//ERROR
+					if (!strcmp((char *)until_space, command_pwm)){
+						if (pwm) {
+							sprintf((char*)buff_to_send,POWER_MODE_ON, pwm);
+						} else {
+							sprintf((char*)buff_to_send,POWER_MODE_OFF);
+						}
+					} else {
+						sprintf((char*)buff_to_send, ERROR);//ERROR
+					}
 				}
 			}
 			DebagUart(buff_to_send);
