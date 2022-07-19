@@ -4,9 +4,8 @@
  * Author : sshmykov
  */ 
  /*
- trying to process command : (power <NUMBER>) ,
- splitting the received string into 2 parts:
- before the space, after the space
+ trying to add Pwm.
+ I will add all the PWM functionality to pwm.c 
  */
 #define F_CPU 16000000L
 #include <avr/io.h>
@@ -16,6 +15,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "pwm.h"
 
 #define USART_BAUDRATE 19200
 #define buff_rx_SIZE 32
@@ -118,6 +119,7 @@ void DebagUart( const char * data ) {
 }
 
 int main(void) {
+	pwm_init();
 	UartInit();
 	sei();
 	while (1) {
