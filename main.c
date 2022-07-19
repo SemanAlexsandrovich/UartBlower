@@ -4,7 +4,8 @@
  * Author : sshmykov
  */ 
  /*
- I will add all the UART functionality to UART.c 
+In this branch I am trying to make a rotation counter.
+Add new Timer in pwm.c
  */
 #define F_CPU 16000000L
 #include <avr/io.h>
