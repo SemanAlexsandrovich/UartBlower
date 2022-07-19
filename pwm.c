@@ -1,5 +1,5 @@
 /*
- * blower.c
+ * pwm.c
  *
  * Created: 30.06.2022 17:56:58
  * Author : sshmykov

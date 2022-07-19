@@ -122,6 +122,12 @@ int main(void) {
 	pwm_init();
 	UartInit();
 	sei();
+	
+	char buff_to_send[SIZEOF_SENDBUF];
+	sprintf((char*)buff_to_send,POWER_MODE_OFF);
+	DebagUart(buff_to_send);
+	UCSR0B |= (1 << UDRIE0);
+	
 	while (1) {
 		if (flag_recive) {
 			//separate rx buf
@@ -152,17 +158,20 @@ int main(void) {
 			else {//str havnt spaces
 				until_space = buff_rx_begin;
 			}
-			char buff_to_send[SIZEOF_SENDBUF];
 			if (!strcmp((char *)until_space, command_off)){
+				setPwmDuty(0);
 				sprintf((char*)buff_to_send,POWER_MODE_OFF);
 			} else {
 				if (!strcmp((char *)until_space, command_on)){
+					setPwmDuty(pwm);
 					sprintf((char*)buff_to_send,POWER_MODE_ON, pwm);
 				} else {
 					if (!strcmp((char *)until_space, command_pwm)){
 						if (pwm) {
+							setPwmDuty(pwm);
 							sprintf((char*)buff_to_send,POWER_MODE_ON, pwm);
 						} else {
+							setPwmDuty(0);
 							sprintf((char*)buff_to_send,POWER_MODE_OFF);
 						}
 					} else {
