@@ -26,26 +26,26 @@ volatile uint8_t pos = 0;
 volatile uint8_t j = 0;
 volatile uint8_t flag = 0;
 volatile uint8_t pwm = 0;
+volatile uint16_t counter = 0;
+volatile uint32_t rev_per_min = 0;
+volatile uint8_t flag_rev = 0;
 
 const char command_on[] = "On\r";
 const char command_off[] = "Off\r";
 const char command_pwm[] = "Power";
 
 volatile uint8_t answer = 2;
-
-#define POWER_MODE_OFF "mode:OFF [power: 0%%]\r\n"
-#define POWER_MODE_ON "mode:ON   [power: %d%%]\r\n"
-#define ERROR "Error\r\n"
-
 volatile char flag_recive = 0;
 
 int main(void) {
 	pwm_init();
+	timer_init();
+	counter_init();
 	UartInit();
 	sei();
 	
 	char buff_to_send[SIZEOF_SENDBUF];
-	sprintf((char*)buff_to_send,POWER_MODE_OFF);
+	sprintf((char*)buff_to_send, "mode:OFF [power: 0%%]\r\n");
 	DebagUart(buff_to_send);
 	UCSR0B |= (1 << UDRIE0);
 	
@@ -77,28 +77,34 @@ int main(void) {
 			}
 			if (!strcmp((char *)until_space, command_off)){
 				setPwmDuty(0);
-				sprintf((char*)buff_to_send,POWER_MODE_OFF);
+				sprintf((char*)buff_to_send, "mode:OFF [power: 0%%]\r\n");
 			} else {
 				if (!strcmp((char *)until_space, command_on)){
 					setPwmDuty(pwm);
-					sprintf((char*)buff_to_send,POWER_MODE_ON, pwm);
+					sprintf((char*)buff_to_send, "mode:ON   [power: %d%%]\r\n", pwm);
 				} else {
 					if (!strcmp((char *)until_space, command_pwm)){
 						if (pwm) {
 							setPwmDuty(pwm);
-							sprintf((char*)buff_to_send,POWER_MODE_ON, pwm);
+							sprintf((char*)buff_to_send, "mode:ON   [power: %d%%]\r\n", pwm);
 						} else {
 							setPwmDuty(0);
-							sprintf((char*)buff_to_send,POWER_MODE_OFF);
+							sprintf((char*)buff_to_send, "mode:OFF [power: 0%%]\r\n");
 						}
 					} else {
-						sprintf((char*)buff_to_send, ERROR);
+						sprintf((char*)buff_to_send, "Error\r\n");
 					}
 				}
 			}
 			DebagUart(buff_to_send);
 			UCSR0B |= (1 << UDRIE0);
 			flag_recive = 0;
+		} 
+		if (flag_rev) {
+			sprintf((char*)buff_to_send, "rev: %lu RPM\r\n", rev_per_min);
+			DebagUart(buff_to_send);
+			UCSR0B |= (1 << UDRIE0);
+			flag_rev = 0;
 		}
 	}
 }

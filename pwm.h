@@ -11,6 +11,7 @@
 
 void pwm_init(void);
 void setPwmDuty(uint8_t);
-
+void counter_init(void);
+void timer_init(void);
 
 #endif /* PWM_H_ */
