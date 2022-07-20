@@ -17,8 +17,7 @@
 
 volatile extern uint8_t flag_rev;
 volatile extern uint16_t counter;
-//volatile extern uint32_t rev_per_min;
-volatile extern uint16_t rev_per_min;
+volatile extern uint32_t rev_per_min;
 
 ISR(TIMER0_COMPA_vect) {//timer interrupt once per second
 cli();
@@ -26,7 +25,7 @@ cli();
 	timer_hold--;
 	if (timer_hold == 0) {
 		//rev_per_min = counter * 60;
-		rev_per_min = (uint32_t)counter;
+		rev_per_min = ((uint32_t)counter)*30;//*(60/2). 2 impuls per rev
 		counter = 0;
 		timer_hold = 100;
 		flag_rev = 1;
@@ -42,7 +41,7 @@ sei();
 
 void timer_init(void) {
 	//Set the timer to overflow after one second
-	//The minimum frequency that can be achieved is 100Hz
+	//The frequency that can be achieved is 100Hz
 	//but need 1Hz
 	TCCR0A |= (1 << WGM01);//ctc mode
 	OCR0A = 155;
@@ -56,8 +55,14 @@ void counter_init(void) {
 	PORTD |= (1 << PIND2); 
 
 	EIMSK = (1 << INT0);
+	/*
+	Any logical change on INT0 generates an interrupt request.
+	does not fit because for one tachometer signal 
+	we will increase the counter by 2, not by 1
+	*/
+	//The rising edge of INT0 generates an interrupt request.
 	EICRA |= (1 << ISC00);
-	EICRA &= ~(1 << ISC01);
+	EICRA |= (1 << ISC01);
 }
 
 void pwm_init(void) {
